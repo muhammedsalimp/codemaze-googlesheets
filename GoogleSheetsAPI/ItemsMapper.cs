@@ -10,7 +10,7 @@ namespace GoogleSheetsAPI
 
             foreach (var value in values)
             {
-                Item item = new Item()
+                Item item = new()
                 {
                     Id = value[0].ToString(),
                     Name = value[1].ToString(),
@@ -24,7 +24,7 @@ namespace GoogleSheetsAPI
             return items;
         }
 
-        public static List<IList<object>> MapToRangeData(Item item)
+        public static IList<IList<object>> MapToRangeData(Item item)
         {
             var objectList = new List<object>() { item.Id, item.Name, item.Category, item.Price };
             var rangeData = new List<IList<object>> { objectList };

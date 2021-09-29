@@ -2,86 +2,83 @@
 using Google.Apis.Sheets.v4.Data;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq;
+using static Google.Apis.Sheets.v4.SpreadsheetsResource.ValuesResource;
 
 namespace GoogleSheetsAPI.Controllers
 {
-[Route("api/[controller]")]
-[ApiController]
-public class ItemsController : ControllerBase
-{
-    const string SPREADSHEET_ID = "143JhAuG7l....";
-    const string SHEET_NAME = "Items";
-
-    GoogleSheetsHelper _googleSheetsHelper;
-
-    public ItemsController(GoogleSheetsHelper googleSheetsHelper)
+    [Route("api/[controller]")]
+    [ApiController]
+    public class ItemsController : ControllerBase
     {
-        _googleSheetsHelper = googleSheetsHelper ?? throw new System.ArgumentNullException(nameof(googleSheetsHelper));
-    }
+        const string SPREADSHEET_ID = "143JhAuG7l....";
+        const string SHEET_NAME = "Items";
 
-    // GET: api/<ItemsController>
-    [HttpGet]
-    public IActionResult Get()
-    {
-        var range = $"{SHEET_NAME}!A:D";
-        var request = _googleSheetsHelper.Service.Spreadsheets.Values.Get(SPREADSHEET_ID, range);
-        var response = request.Execute();
-        var values = response.Values;
+        SpreadsheetsResource.ValuesResource _googleSheetValues;
 
-        return Ok(ItemsMapper.MapFromRangeData(values));
-    }
-
-    // GET api/<ItemsController>/5
-    [HttpGet("{rowId}")]
-    public IActionResult Get(int rowId)
-    {
-        var range = $"{SHEET_NAME}!A{rowId}:D{rowId}";
-        var request = _googleSheetsHelper.Service.Spreadsheets.Values.Get(SPREADSHEET_ID, range);
-        var response = request.Execute();
-        var values = response.Values;
-
-        return Ok(ItemsMapper.MapFromRangeData(values).FirstOrDefault());
-    }
-
-    // POST api/<ItemsController>
-    [HttpPost]
-    public void Post(Item item)
-    {
-        var range = $"{SHEET_NAME}!A:D";
-        var valueRange = new ValueRange
+        public ItemsController(GoogleSheetsHelper googleSheetsHelper)
         {
-            Values = ItemsMapper.MapToRangeData(item)
-        };
+            _googleSheetValues = googleSheetsHelper.Service.Spreadsheets.Values;
+        }
 
-        var appendRequest = _googleSheetsHelper.Service.Spreadsheets.Values.Append(valueRange, SPREADSHEET_ID, range);
-        appendRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.AppendRequest.ValueInputOptionEnum.USERENTERED;
-        appendRequest.Execute();            
-    }
-
-    // PUT api/<ItemsController>/5
-    [HttpPut("{rowId}")]
-    public void Put(int rowId, Item item)
-    {
-        var range = $"{SHEET_NAME}!A{rowId}:D{rowId}";
-        var valueRange = new ValueRange
+        [HttpGet]
+        public IActionResult Get()
         {
-            Values = ItemsMapper.MapToRangeData(item)
-        };
+            var range = $"{SHEET_NAME}!A:D";
 
-        var updateRequest = _googleSheetsHelper.Service.Spreadsheets.Values.Update(valueRange, SPREADSHEET_ID, range);
-        updateRequest.ValueInputOption = SpreadsheetsResource.ValuesResource.UpdateRequest.ValueInputOptionEnum.USERENTERED;
-        updateRequest.Execute();
+            var request = _googleSheetValues.Get(SPREADSHEET_ID, range);
+            var response = request.Execute();
+            var values = response.Values;
+
+            return Ok(ItemsMapper.MapFromRangeData(values));
+        }
+
+        [HttpGet("{rowId}")]
+        public IActionResult Get(int rowId)
+        {
+            var range = $"{SHEET_NAME}!A{rowId}:D{rowId}";
+            var request = _googleSheetValues.Get(SPREADSHEET_ID, range);
+            var response = request.Execute();
+            var values = response.Values;
+
+            return Ok(ItemsMapper.MapFromRangeData(values).FirstOrDefault());
+        }
+
+        [HttpPost]
+        public void Post(Item item)
+        {
+            var range = $"{SHEET_NAME}!A:D";
+            var valueRange = new ValueRange
+            {
+                Values = ItemsMapper.MapToRangeData(item)
+            };
+
+            var appendRequest = _googleSheetValues.Append(valueRange, SPREADSHEET_ID, range);
+            appendRequest.ValueInputOption = AppendRequest.ValueInputOptionEnum.USERENTERED;
+            appendRequest.Execute();
+        }
+
+        [HttpPut("{rowId}")]
+        public void Put(int rowId, Item item)
+        {
+            var range = $"{SHEET_NAME}!A{rowId}:D{rowId}";
+            var valueRange = new ValueRange
+            {
+                Values = ItemsMapper.MapToRangeData(item)
+            };
+
+            var updateRequest = _googleSheetValues.Update(valueRange, SPREADSHEET_ID, range);
+            updateRequest.ValueInputOption = UpdateRequest.ValueInputOptionEnum.USERENTERED;
+            updateRequest.Execute();
+        }
+
+        [HttpDelete("{rowId}")]
+        public void Delete(int rowId)
+        {
+            var range = $"{SHEET_NAME}!A{rowId}:D{rowId}";
+            var requestBody = new ClearValuesRequest();
+
+            var deleteRequest = _googleSheetValues.Clear(requestBody, SPREADSHEET_ID, range);
+            deleteRequest.Execute();
+        }
     }
-
-    // DELETE api/<ItemsController>/5
-    [HttpDelete("{rowId}")]
-    public void Delete(int rowId)
-    {
-        var range = $"{SHEET_NAME}!A{rowId}:D{rowId}";
-        var requestBody = new ClearValuesRequest();
-
-        var deleteRequest = _googleSheetsHelper.Service.Spreadsheets.Values.Clear(requestBody, SPREADSHEET_ID, range);
-        deleteRequest.Execute();
-    }
-}
 }
